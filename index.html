@@ -1,30 +1,297 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather App-Hanbii</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Cuaca</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom styles can go here if needed */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .weather-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .search-button {
+            transition: background-color 0.2s;
+        }
+        .forecast-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-  <div class="bg-white p-6 rounded-xl shadow-lg w-96">
-    <h1 class="text-2xl font-bold text-center mb-4 text-blue-600">Weather App-Hanbii</h1>
+    <div class="w-full max-w-4xl mx-auto">
+        <!-- Main Weather Application Container -->
+        <div class="weather-card p-6 sm:p-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-6">Prakiraan Cuaca</h1>
 
-    <div class="flex gap-2 mb-4">
-      <input id="cityInput" 
-             type="text" 
-             placeholder="Masukkan nama kota..." 
-             class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
-      <button onclick="getWeather()" 
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-        Cari
-      </button>
+            <!-- Search Bar -->
+            <div class="flex flex-col sm:flex-row gap-2 mb-6">
+                <input type="text" id="city-input" placeholder="Masukkan nama kota (contoh: Kapuas)" class="w-full px-4 py-2 text-gray-700 bg-gray-100 border-2 border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button id="search-button" class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 search-button flex items-center justify-center gap-2">
+                    <i class="fas fa-search"></i>
+                    <span>Cari</span>
+                </button>
+            </div>
+
+            <!-- Loading Spinner and Error Message -->
+            <div id="loading" class="text-center my-8 hidden">
+                <i class="fas fa-spinner fa-spin fa-3x text-blue-500"></i>
+                <p class="mt-2 text-gray-600">Memuat data...</p>
+            </div>
+            <div id="error-message" class="text-center my-8 p-4 bg-red-100 text-red-700 rounded-lg hidden"></div>
+
+            <!-- Weather Results Container -->
+            <div id="weather-result" class="hidden">
+                <!-- Current Weather Section -->
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-b pb-6 mb-6">
+                    <!-- Left side: Temp and City -->
+                    <div class="text-center md:text-left">
+                        <h2 id="city-name" class="text-3xl font-bold text-gray-900">Nama Kota</h2>
+                        <p id="current-date" class="text-gray-500">Tanggal & Waktu</p>
+                        <div class="flex items-center justify-center md:justify-start gap-4 mt-4">
+                            <img id="current-weather-icon" src="https://placehold.co/100x100/FFFFFF/CCCCCC?text=Icon" alt="Ikon Cuaca" class="w-20 h-20">
+                            <div>
+                                <p id="current-temp" class="text-6xl font-bold text-gray-900">0°C</p>
+                                <p id="current-weather-desc" class="text-lg text-gray-600 capitalize">Deskripsi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right side: Details -->
+                    <div class="w-full md:w-auto grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:text-base">
+                        <div class="flex items-center gap-2 text-gray-700">
+                            <i class="fas fa-temperature-half w-5 text-center text-blue-500"></i>
+                            <div>
+                                <p class="font-semibold">Terasa Seperti</p>
+                                <p id="feels-like">0°C</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-700">
+                            <i class="fas fa-wind w-5 text-center text-blue-500"></i>
+                            <div>
+                                <p class="font-semibold">Angin</p>
+                                <p id="wind-speed">0 m/s</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-700">
+                            <i class="fas fa-tint w-5 text-center text-blue-500"></i>
+                            <div>
+                                <p class="font-semibold">Kelembapan</p>
+                                <p id="humidity">0%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-700">
+                            <i class="fas fa-compress-arrows-alt w-5 text-center text-blue-500"></i>
+                            <div>
+                                <p class="font-semibold">Tekanan</p>
+                                <p id="pressure">0 hPa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast Section -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Prakiraan 5 Hari Kedepan</h3>
+                    <div id="forecast-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        <!-- Forecast cards will be injected here -->
+                    </div>
+                </div>
+            </div>
+             <!-- Initial message -->
+            <div id="initial-message" class="text-center py-10 text-gray-500">
+                <i class="fas fa-cloud-sun fa-3x mb-3"></i>
+                <p>Silakan masukkan nama kota untuk melihat prakiraan cuaca.</p>
+            </div>
+        </div>
+        <footer class="text-center mt-4 text-sm text-gray-500">
+            <div class="copyright">
+        <p>&copy; Rubii-2025. Seluruh hak cipta.</p>
+        </footer>
     </div>
 
-    <div id="weatherResult" class="text-center text-gray-700"></div>
-  </div>
+    <script>
+        // --- PENTING: Ganti dengan API Key Anda ---
+        // Dapatkan API Key gratis dari https://openweathermap.org/
+        const API_KEY = 'fa57058d3c148c2dfa30e4c29cd5a00b'; 
+        
+        // --- DOM Elements ---
+        const cityInput = document.getElementById('city-input');
+        const searchButton = document.getElementById('search-button');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const weatherResult = document.getElementById('weather-result');
+        const initialMessage = document.getElementById('initial-message');
 
-  <script src="script.js"></script>
+        // --- Weather Data Display Elements ---
+        const cityNameEl = document.getElementById('city-name');
+        const currentDateEl = document.getElementById('current-date');
+        const currentWeatherIconEl = document.getElementById('current-weather-icon');
+        const currentTempEl = document.getElementById('current-temp');
+        const currentWeatherDescEl = document.getElementById('current-weather-desc');
+        const feelsLikeEl = document.getElementById('feels-like');
+        const windSpeedEl = document.getElementById('wind-speed');
+        const humidityEl = document.getElementById('humidity');
+        const pressureEl = document.getElementById('pressure');
+        const forecastContainer = document.getElementById('forecast-container');
+
+        // --- Translation for Weather Descriptions (Indonesian) ---
+        const weatherTranslations = {
+            'clear sky': 'Cerah',
+            'few clouds': 'Sedikit Berawan',
+            'scattered clouds': 'Berawan',
+            'broken clouds': 'Sangat Berawan',
+            'overcast clouds': 'Mendung',
+            'shower rain': 'Hujan Ringan',
+            'rain': 'Hujan',
+            'light rain': 'Hujan Gerimis',
+            'moderate rain': 'Hujan Sedang',
+            'heavy intensity rain': 'Hujan Lebat',
+            'thunderstorm': 'Hujan Badai',
+            'snow': 'Salju',
+            'mist': 'Berkabut',
+        };
+
+        // --- Event Listeners ---
+        searchButton.addEventListener('click', () => {
+            const city = cityInput.value.trim();
+            if (city) {
+                fetchWeatherData(city);
+            } else {
+                showError('Silakan masukkan nama kota.');
+            }
+        });
+
+        cityInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        // --- Main Function to Fetch Weather Data ---
+        async function fetchWeatherData(city) {
+            if (API_KEY === 'GANTI_DENGAN_API_KEY_ANDA' || !API_KEY) {
+                showError('API Key belum diatur. Silakan edit file HTML dan masukkan API key Anda.');
+                return;
+            }
+
+            // Show loading and hide other elements
+            loading.classList.remove('hidden');
+            weatherResult.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            initialMessage.classList.add('hidden');
+
+            const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=id`;
+            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric&lang=id`;
+
+            try {
+                // Fetch both current weather and forecast concurrently
+                const [currentWeatherResponse, forecastResponse] = await Promise.all([
+                    fetch(currentWeatherUrl),
+                    fetch(forecastUrl)
+                ]);
+
+                if (!currentWeatherResponse.ok || !forecastResponse.ok) {
+                    if (currentWeatherResponse.status === 404) {
+                        throw new Error('Kota tidak ditemukan. Mohon periksa kembali nama kota.');
+                    } else if (currentWeatherResponse.status === 401) {
+                         throw new Error('API Key tidak valid. Silakan periksa kembali API Key Anda.');
+                    }
+                    else {
+                        throw new Error('Gagal mengambil data cuaca.');
+                    }
+                }
+
+                const currentWeatherData = await currentWeatherResponse.json();
+                const forecastData = await forecastResponse.json();
+
+                displayCurrentWeather(currentWeatherData);
+                displayForecast(forecastData);
+
+                // Show results
+                weatherResult.classList.remove('hidden');
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                // Hide loading spinner
+                loading.classList.add('hidden');
+            }
+        }
+
+        // --- Function to Display Current Weather ---
+        function displayCurrentWeather(data) {
+            cityNameEl.textContent = data.name;
+            currentDateEl.textContent = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            currentWeatherIconEl.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+            currentTempEl.textContent = `${Math.round(data.main.temp)}°C`;
+            const description = data.weather[0].description;
+            currentWeatherDescEl.textContent = weatherTranslations[description] || description;
+            
+            feelsLikeEl.textContent = `${Math.round(data.main.feels_like)}°C`;
+            windSpeedEl.textContent = `${data.wind.speed.toFixed(1)} m/s`;
+            humidityEl.textContent = `${data.main.humidity}%`;
+            pressureEl.textContent = `${data.main.pressure} hPa`;
+        }
+
+        // --- Function to Display 5-Day Forecast ---
+        function displayForecast(data) {
+            forecastContainer.innerHTML = '';
+            
+            // Filter the forecast list to get one entry per day (around midday)
+            const dailyForecasts = data.list.filter(item => item.dt_txt.includes("12:00:00"));
+
+            dailyForecasts.forEach(forecast => {
+                const day = new Date(forecast.dt * 1000).toLocaleDateString('id-ID', { weekday: 'short' });
+                const icon = forecast.weather[0].icon;
+                const temp = Math.round(forecast.main.temp);
+
+                const forecastCard = `
+                    <div class="forecast-card bg-gray-100 p-3 text-center rounded-lg">
+                        <p class="font-semibold text-gray-700">${day}</p>
+                        <img src="https://openweathermap.org/img/wn/${icon}.png" alt="Ikon Cuaca" class="mx-auto w-12 h-12">
+                        <p class="font-bold text-gray-800">${temp}°C</p>
+                    </div>
+                `;
+                forecastContainer.innerHTML += forecastCard;
+            });
+        }
+        
+        // --- Utility Functions ---
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            weatherResult.classList.add('hidden');
+        }
+
+        // Load weather for a default city on startup
+        fetchWeatherData('Jakarta');
+
+    </script>
 </body>
 </html>
+
+
+
+
